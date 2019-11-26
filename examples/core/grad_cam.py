@@ -10,6 +10,8 @@ if __name__ == "__main__":
     img = tf.keras.preprocessing.image.load_img(IMAGE_PATH, target_size=(224, 224))
     img = tf.keras.preprocessing.image.img_to_array(img)
 
+    print(img.shape)
+
     model.summary()
     data = ([img], None)
 
