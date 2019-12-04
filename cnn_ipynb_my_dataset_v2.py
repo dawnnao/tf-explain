@@ -66,25 +66,36 @@ from tf_explain.callbacks.grad_cam import GradCAMCallback
 #   pass
 
 import tensorflow as tf
-keras = tf.keras
+# keras = tf.keras
+from tensorflow import keras
 
 # from tensorflow.keras import datasets, layers, models
 import matplotlib.pyplot as plt
 import hdf5storage as hdf5storage
 import numpy as np
 
+from IPython.display import SVG
+
+import os
+from tensorflow.keras.utils import model_to_dot
+from tensorflow.keras.utils import plot_model
+
+
 
 #%%
 file_name = 'dataset_10017_reshaped.mat'
 data_raw = hdf5storage.loadmat(file_name)
 images = data_raw['img']
-images = images[:, :, :, 0]
-images = np.expand_dims(images, axis=-1)
+# images = images[:, :, :, 0]
+# images = np.expand_dims(images, axis=-1)
 labels = data_raw['label']
 print(labels.dtype)
 labels = labels.astype('uint8')
 labels = labels - 1
 print(labels.dtype)
+
+width_image = 100  # width of images
+num_classes = 7
 
 # randomization
 randseed = 1
@@ -133,8 +144,55 @@ The 6 lines of code below define the convolutional base using a common pattern: 
 As input, a CNN takes tensors of shape (image_height, image_width, color_channels), ignoring the batch size. If you are new to these dimensions, color_channels refers to (R,G,B). In this example, you will configure our CNN to process inputs of shape (32, 32, 3), which is the format of CIFAR images. You can do this by passing the argument `input_shape` to our first layer.
 """
 
+def model(data_input1, data_input2, data_input3, data_output):
+
+    # input layer
+    input_time = keras.layers.Input(shape=(width_image, width_image, 1), name='Input_time')
+    input_freq = keras.layers.Input(shape=(width_image, width_image, 1), name='Input_freq')
+    input_recc = keras.layers.Input(shape=(width_image, width_image, 1), name='Input_recc')
+
+    conv_time_1 = keras.layers.Conv2D(32, (3, 3), activation='relu', input_shape=(width_image, width_image, 1), name='Conv_time_1')
+    maxpool_time_1 = keras.layers.MaxPooling2D((2, 2), name='Maxpool_time_1')
+    conv_time_2 = keras.layers.Conv2D(64, (3, 3), activation='relu', name='Conv_time_2')
+    maxpool_time_2 = keras.layers.MaxPooling2D((2, 2), name='Maxpool_time_2')
+    conv_time_3 = keras.layers.Conv2D(64, (3, 3), activation='relu', name='Conv_time_3')
+
+    conv_freq_1 = keras.layers.Conv2D(32, (3, 3), activation='relu', input_shape=(width_image, width_image, 1), name='Conv_freq_1')
+    maxpool_freq_1 = keras.layers.MaxPooling2D((2, 2), name='Maxpool_freq_1')
+    conv_freq_2 = keras.layers.Conv2D(64, (3, 3), activation='relu', name='Conv_freq_2')
+    maxpool_freq_2 = keras.layers.MaxPooling2D((2, 2), name='Maxpool_freq_2')
+    conv_freq_3 = keras.layers.Conv2D(64, (3, 3), activation='relu', name='Conv_freq_3')
+
+    conv_recc_1 = keras.layers.Conv2D(32, (3, 3), activation='relu', input_shape=(width_image, width_image, 1), name='Conv_recc_1')
+    maxpool_recc_1 = keras.layers.MaxPooling2D((2, 2), name='Maxpool_recc_1')
+    conv_recc_2 = keras.layers.Conv2D(64, (3, 3), activation='relu', name='Conv_recc_2')
+    maxpool_recc_2 = keras.layers.MaxPooling2D((2, 2), name='Maxpool_recc_2')
+    conv_recc_3 = keras.layers.Conv2D(64, (3, 3), activation='relu', name='Conv_recc_3')
+
+    merged = keras.layers.concatenate([conv_time_3, conv_freq_3, conv_recc_3], axis=-1)
+    merged = keras.layers.Flatten()(merged)
+
+    dense_1 = keras.layers.Dense(64, activation='relu', name='Dense_1')(merged)
+    output = keras.layers.Dense(num_classes, activation='softmax')(dense_1)
+
+    model = keras.models.Model(inputs=[input_time, input_freq, input_recc], outputs=[output])
+    return model
+
+
+model = model(images_train[:, :, :, 0], images_train[:, :, :, 1], images_train[:, :, :, 2], labels_train)
+
+model.summary()
+
+if not os.path.exists('model.png'):
+    plot_model(model, to_file='model.png', show_shapes=True, show_layer_names=True)
+
+SVG(model_to_dot(model).create(prog='dot', format='svg'))
+
+
+#%%
+
 model = keras.models.Sequential()
-model.add(keras.layers.Conv2D(32, (3, 3), activation='relu', input_shape=(100, 100, 1), name='conv1'))
+model.add(keras.layers.Conv2D(32, (3, 3), activation='relu', input_shape=(width_image, width_image, 1), name='conv1'))
 model.add(keras.layers.MaxPooling2D((2, 2), name='maxpool1'))
 model.add(keras.layers.Conv2D(64, (3, 3), activation='relu', name='conv2'))
 model.add(keras.layers.MaxPooling2D((2, 2), name='maxpool2'))
