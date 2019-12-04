@@ -26,7 +26,7 @@ class OcclusionSensitivity:
         model,
         class_index,
         patch_size,
-        colormap=cv2.COLORMAP_VIRIDIS,
+        colormap=cv2.COLORMAP_TURBO,
     ):
         """
         Compute Occlusion Sensitivity maps for a specific class index.
