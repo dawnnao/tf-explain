@@ -24,6 +24,7 @@ class GradCAM:
         model,
         layer_name,
         class_index,
+        input_index,
         colormap=cv2.COLORMAP_TURBO,
     ):
         """
@@ -35,6 +36,7 @@ class GradCAM:
             model (tf.keras.Model): tf.keras model to inspect
             layer_name (str): Targeted layer for GradCAM
             class_index (int): Index of targeted class
+            input_index (int): Index of targeted input of multi-input
             colormap (int): OpenCV Colormap to use for heatmap visualization
 
         Returns:
@@ -51,7 +53,7 @@ class GradCAM:
         heatmaps = np.array(
             [
                 heatmap_display(cam.numpy(), image, colormap)
-                for cam, image in zip(cams, images)
+                for cam, image in zip(cams, images[input_index])
             ]
         )
 
@@ -79,7 +81,8 @@ class GradCAM:
         )
 
         with tf.GradientTape() as tape:
-            inputs = tf.cast(images, tf.float32)
+            # inputs = tf.cast(images, tf.float32)
+            inputs = images
             conv_outputs, predictions = grad_model(inputs)
             loss = predictions[:, class_index]
 
