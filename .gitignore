@@ -127,3 +127,8 @@ dmypy.json
 .idea/
 *.mat
 temp
+
+# Folder
+grad_cam_examples_4inputs_3epochs
+grad_cam_examples_4inputs
+grad_cam_examples_3inputs

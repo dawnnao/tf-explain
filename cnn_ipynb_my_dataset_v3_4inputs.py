@@ -265,7 +265,7 @@ model.compile(optimizer='adam',
               loss='sparse_categorical_crossentropy',
               metrics=['accuracy'])
 
-history = model.fit(x=[data_input1, data_input2, data_input3, data_input4], y=[data_output], epochs=1, verbose=1,
+history = model.fit(x=[data_input1, data_input2, data_input3, data_input4], y=[data_output], epochs=3, verbose=1,
                     validation_data=([data_input1_vali, data_input2_vali, data_input3_vali, data_input4_vali],
                                      [data_output_vali]))  # , callbacks=callbacks
 
@@ -293,7 +293,7 @@ see an example using the Keras subclassing API and a `tf.GradientTape`
 explainer = GradCAM()
 
 for class_index in range(7):
-    for input_index, name_of_conv in zip(range(4), ['Conv_time_3', 'Conv_freq_3', 'Conv_recc_3', 'Conv_spec_3']):
+    for input_index, name_of_conv in zip(range(4), ['Conv_time_3', 'Conv_freq_3', 'Conv_spec_3', 'Conv_recc_3']):
         ind_in_images_vali = np.where(labels_vali == class_index)[0]
 
         img_explain1 = data_input1_vali[ind_in_images_vali[0:25], :, :, :].astype('float32')
@@ -301,13 +301,27 @@ for class_index in range(7):
         img_explain3 = data_input3_vali[ind_in_images_vali[0:25], :, :, :].astype('float32')
         img_explain4 = data_input4_vali[ind_in_images_vali[0:25], :, :, :].astype('float32')
 
-        data = ([img_explain1, img_explain2, img_explain3, img_explain3], None)
+        data = ([img_explain1, img_explain2, img_explain3, img_explain4], None)
 
         # Save output
         output_dir = '.'
-        output_name = 'grad_cam_class_%d_channel_%d.png' % (class_index, input_index)
+        output_name = 'grad_cam_class_%d_input_%d.png' % (class_index, input_index)
 
         output = explainer.explain(data, model, name_of_conv, class_index, input_index)
         explainer.save(output, output_dir, output_name)
 
+#%%
+for class_index in range(7):
+    for input_index in range(4):
+        ind_in_images_vali = np.where(labels_vali == class_index)[0]
 
+        fig = plt.figure(figsize=(10, 10))
+        for m in range(25):
+            plt.subplot(5, 5, m + 1)
+            plt.xticks([])
+            plt.yticks([])
+            plt.grid(False)
+            plt.imshow(images_vali[ind_in_images_vali[m], :, :, input_index], cmap='gray')
+            # plt.xlabel('%d' % labels_train[m])
+        plt.show()
+        fig.savefig('original_image_class_%d_input_%d.png' % (class_index, input_index))
